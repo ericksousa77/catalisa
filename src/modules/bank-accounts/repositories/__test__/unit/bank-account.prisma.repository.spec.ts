@@ -22,7 +22,8 @@ describe('BankAccountPrismaRepository', () => {
             bankAccount: {
               create: jest.fn(),
               deleteMany: jest.fn(),
-              update: jest.fn()
+              update: jest.fn(),
+              findFirstOrThrow: jest.fn()
             }
           }
         }
@@ -156,6 +157,37 @@ describe('BankAccountPrismaRepository', () => {
         ...activeBankAccount,
         isActive: false
       })
+    })
+  })
+
+  describe('findOne', () => {
+    it('should call prisma method to find one bank account by ID ', async () => {
+      const bankAccount = BankAccountEntity.create({
+        agency: 'Mocked Agency',
+        type: 'CORRENTE',
+        balance: 2000,
+        isActive: true,
+        accountNumber: 1
+      })
+
+      model.findFirstOrThrow.mockResolvedValue({
+        ...bankAccount,
+        Transactions: null
+      })
+
+      const result = await bankAccountRepository.findOne(bankAccount.id)
+
+      expect(model.findFirstOrThrow).toBeCalledTimes(1)
+      expect(model.findFirstOrThrow).toHaveBeenCalledWith({
+        where: {
+          id: bankAccount.id
+        },
+        include: {
+          Transactions: true
+        }
+      })
+
+      expect(result).toEqual({ ...bankAccount, Transactions: null })
     })
   })
 })
