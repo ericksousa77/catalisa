@@ -7,6 +7,7 @@ import { BankAccountRepository } from '@src/modules/bank-accounts/domain/interfa
 import { BankAccountManagementService } from '@src/modules/bank-accounts/domain/services/bank-account-management.service'
 
 import { CreateBankAccountInputDto } from '@src/modules/bank-accounts/http/dtos/bank-account/create-bank-account-dto'
+import { UpdateBankAccountInputDto } from '@src/modules/bank-accounts/http/dtos/bank-account/update-bank-account-dto'
 
 describe('BankAccountManagementService', () => {
   let service: BankAccountManagementService
@@ -19,7 +20,8 @@ describe('BankAccountManagementService', () => {
         {
           provide: BankAccountRepository,
           useValue: {
-            save: jest.fn()
+            save: jest.fn(),
+            update: jest.fn()
           }
         }
       ]
@@ -67,6 +69,48 @@ describe('BankAccountManagementService', () => {
         ...bankAccountEntity,
         accountNumber: 2,
         isActive: true
+      })
+    })
+  })
+
+  describe('update', () => {
+    it('should call bank account repository function to update bank account and return bank account updated', async () => {
+      const oldBankAccountEntity = BankAccountEntity.create({
+        agency: 'Mocked Agency',
+        type: 'POUPANCA',
+        balance: 0
+      })
+
+      const bankAccountToUpdateProps: UpdateBankAccountInputDto = {
+        agency: 'New Mocked Agency',
+        type: 'CORRENTE'
+      }
+
+      jest.spyOn(bankAccountRepository, 'update').mockResolvedValue({
+        ...oldBankAccountEntity,
+        accountNumber: 2,
+        isActive: true,
+        agency: 'New Mocked Agency',
+        type: 'CORRENTE'
+      })
+
+      const result = await service.update(
+        oldBankAccountEntity.id,
+        bankAccountToUpdateProps
+      )
+
+      expect(bankAccountRepository.update).toBeCalledTimes(1)
+      expect(bankAccountRepository.update).toBeCalledWith(
+        oldBankAccountEntity.id,
+        bankAccountToUpdateProps
+      )
+
+      expect(result).toEqual({
+        ...oldBankAccountEntity,
+        accountNumber: 2,
+        isActive: true,
+        agency: 'New Mocked Agency',
+        type: 'CORRENTE'
       })
     })
   })

@@ -5,6 +5,7 @@ import { BankAccountEntity } from '@src/modules/bank-accounts/domain/entities/ba
 import { BankAccountRepository } from '@src/modules/bank-accounts/domain/interfaces/bank-account.repository.interface'
 
 import { CreateBankAccountInputDto } from '@src/modules/bank-accounts/http/dtos/bank-account/create-bank-account-dto'
+import { UpdateBankAccountInputDto } from '@src/modules/bank-accounts/http/dtos/bank-account/update-bank-account-dto'
 
 @Injectable()
 export class BankAccountManagementService {
@@ -18,5 +19,12 @@ export class BankAccountManagementService {
     })
 
     return this.bankAccountRepository.save(bankAccountEntity)
+  }
+
+  async update(
+    bankAccountId: string,
+    bankAccountProps: UpdateBankAccountInputDto
+  ): Promise<BankAccountEntity> {
+    return this.bankAccountRepository.update(bankAccountId, bankAccountProps)
   }
 }
