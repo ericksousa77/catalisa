@@ -18,28 +18,39 @@ import {
   CreateBankAccountOutputDto,
   CreateBankAccountInputDto
 } from '@src/modules/bank-accounts/http/dtos/bank-account/create-bank-account-dto'
+
 import {
   UpdateBankAccountInputDto,
   UpdateBankAccountOutputDto,
   UpdateBankAccountParamInputDto
-} from '../dtos/bank-account/update-bank-account-dto'
+} from '@src/modules/bank-accounts/http/dtos/bank-account/update-bank-account-dto'
+
 import {
   DeactivateBankAccountOutputDto,
   DeactivateBankAccountParamInputDto
-} from '../dtos/bank-account/deactive-bank-account-dto'
+} from '@src/modules/bank-accounts/http/dtos/bank-account/deactive-bank-account-dto'
+
 import {
   ShowBankAccountOutputDto,
   ShowBankAccountParamInputDto
-} from '../dtos/bank-account/show-bank-account-dto'
+} from '@src/modules/bank-accounts/http/dtos/bank-account/show-bank-account-dto'
+
 import {
   GetAllBankAccountsInputDto,
   GetAllBankAccountsOutputDto
-} from '../dtos/bank-account/get-all-bank-accounts-dto'
+} from '@src/modules/bank-accounts/http/dtos/bank-account/get-all-bank-accounts-dto'
+
 import {
   DepositBankAccountInputDto,
   DepositBankAccountOutputDto,
   DepositBankAccountParamInputDto
-} from '../dtos/bank-account/deposit-bank-account-dto'
+} from '@src/modules/bank-accounts/http/dtos/bank-account/deposit-bank-account-dto'
+
+import {
+  WithdawBankAccountParamInputDto,
+  WithdrawBankAccountInputDto,
+  WithdrawBankAccountOutputDto
+} from '@src/modules/bank-accounts/http/dtos/bank-account/withdraw-bank-account-dto'
 
 @ApiTags('bank-accounts')
 @Controller('bank-accounts')
@@ -179,6 +190,29 @@ export class BankAccountController {
     return this.bankAccountManagementService.depositOnBankAccount(
       params.bankAccountId,
       depositData.value
+    )
+  }
+
+  @Put(':bankAccountId/withdraw') // route HTTP method definition
+  @HttpCode(HttpStatus.OK)
+  /* Swagger Doc */
+  @ApiOperation({
+    summary: 'Bank Account withdraw',
+    description: 'withdraw into bank account'
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Bank Account balance decremented',
+    type: WithdrawBankAccountOutputDto
+  })
+  /* function */
+  async withdrawBankAccount(
+    @Param() params: WithdawBankAccountParamInputDto,
+    @Body() withdrawData: WithdrawBankAccountInputDto
+  ): Promise<WithdrawBankAccountOutputDto> {
+    return this.bankAccountManagementService.withdrawOnBankAccount(
+      params.bankAccountId,
+      withdrawData.value
     )
   }
 }
