@@ -5,7 +5,8 @@ import {
   HttpCode,
   HttpStatus,
   Put,
-  Param
+  Param,
+  Delete
 } from '@nestjs/common'
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 
@@ -67,6 +68,27 @@ export class BankAccountController {
     return this.bankAccountManagementService.update(
       params.bankAccountId,
       bankAccountData
+    )
+  }
+
+  @Delete(':bankAccountId') // route HTTP method definition
+  @HttpCode(HttpStatus.OK)
+  /* Swagger Doc */
+  @ApiOperation({
+    summary: 'Bank Account Deactivate',
+    description: 'Update bank account to inactive'
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Bank Account update to inactived',
+    type: CreateBankAccountOutputDto
+  })
+  /* function */
+  async deactivateBankAccount(
+    @Param() params: UpdateBankAccountParamInputDto
+  ): Promise<UpdateBankAccountOutputDto> {
+    return this.bankAccountManagementService.deactivateBankAccount(
+      params.bankAccountId
     )
   }
 }

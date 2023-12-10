@@ -167,6 +167,7 @@ describe('Bank Account Controller (e2e)', () => {
       expect(balance).toEqual(0)
       expect(isActive).toEqual(true)
     })
+
     it('should throw error if bank account to update not exists on database', async () => {
       const newBankAccountProps: UpdateBankAccountInputDto = {
         agency: 'Mocked Agency 123',
@@ -185,6 +186,27 @@ describe('Bank Account Controller (e2e)', () => {
 
       expect(statusCode).toBe(404)
       expect(message).toBe('Not Found')
+    })
+
+    it('should throw error if bankAccountId is sended but is not UIID', async () => {
+      const newBankAccountProps: UpdateBankAccountInputDto = {
+        agency: 'Mocked Agency 123',
+        type: 'CORRENTE'
+      }
+
+      const mockedFakeUUID = '123'
+
+      const response = await request(app.getHttpServer())
+        .put(`/bank-accounts/${mockedFakeUUID}`)
+        .send(newBankAccountProps)
+
+      const { statusCode, message, error } = response.body
+
+      expect(response.status).toEqual(400)
+
+      expect(statusCode).toBe(400)
+      expect(message[0]).toBe('bankAccountId must be a UUID')
+      expect(error).toBe('Bad Request')
     })
 
     it('should throw error if account type is sended but is not POUPANCA or CORRENTE', async () => {
@@ -215,6 +237,7 @@ describe('Bank Account Controller (e2e)', () => {
       )
       expect(error).toBe('Bad Request')
     })
+
     it('should throw error if account agency is not string', async () => {
       const oldBankAccountEntity = BankAccountEntity.create({
         agency: 'Mocked Agency 123',
@@ -239,6 +262,65 @@ describe('Bank Account Controller (e2e)', () => {
 
       expect(statusCode).toBe(400)
       expect(message[0]).toBe('agency must be a string')
+      expect(error).toBe('Bad Request')
+    })
+  })
+
+  describe('Bank Account Management - update bank account', () => {
+    it('should deactivate and return a bank account', async () => {
+      const activeBankAccountEntity = BankAccountEntity.create({
+        agency: 'Mocked Agency 123',
+        type: 'CORRENTE',
+        balance: 0,
+        isActive: true
+      })
+
+      await bankAccountRepository.save(activeBankAccountEntity)
+
+      const response = await request(app.getHttpServer()).delete(
+        `/bank-accounts/${activeBankAccountEntity.id}`
+      )
+
+      const { id, agency, type, balance, createdAt, updatedAt, isActive } =
+        response.body
+
+      expect(id).toEqual(activeBankAccountEntity.id)
+      expect(agency).toBe(activeBankAccountEntity.agency)
+      expect(type).toBe(activeBankAccountEntity.type)
+      expect(createdAt).toBeDefined()
+      expect(updatedAt).toBeDefined()
+      expect(balance).toEqual(0)
+      expect(isActive).toEqual(false)
+    })
+
+    it('should throw error if bank account to deactivate not exists on database', async () => {
+      const mockedUUID = '34c65aa9-0fc8-4f87-8696-5b1448a06ac4'
+
+      const response = await request(app.getHttpServer()).delete(
+        `/bank-accounts/${mockedUUID}`
+      )
+
+      const { statusCode, message } = response.body
+
+      expect(response.status).toEqual(404)
+
+      expect(statusCode).toBe(404)
+      expect(message).toBe('Not Found')
+    })
+
+    it('should throw error if bankAccountId is sended but is not a uuid', async () => {
+      const mockedFakeUUID = '123'
+
+      const response = await request(app.getHttpServer()).delete(
+        `/bank-accounts/${mockedFakeUUID}`
+      )
+
+      const { statusCode, message, error } = response.body
+
+      expect(response.status).toEqual(400)
+
+      expect(statusCode).toBe(400)
+      expect(message[0]).toBe('bankAccountId must be a UUID')
       expect(error).toBe('Bad Request')
     })
   })
