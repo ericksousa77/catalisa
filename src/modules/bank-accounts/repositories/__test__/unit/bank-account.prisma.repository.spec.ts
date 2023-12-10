@@ -311,7 +311,8 @@ describe('BankAccountPrismaRepository', () => {
       expect(model.update).toBeCalledTimes(1)
       expect(model.update).toHaveBeenCalledWith({
         where: {
-          id: bankAccount.id
+          id: bankAccount.id,
+          isActive: true
         },
         data: {
           balance: {
@@ -361,7 +362,8 @@ describe('BankAccountPrismaRepository', () => {
       expect(model.update).toBeCalledTimes(1)
       expect(model.update).toHaveBeenCalledWith({
         where: {
-          id: bankAccount.id
+          id: bankAccount.id,
+          isActive: true
         },
         data: {
           balance: {

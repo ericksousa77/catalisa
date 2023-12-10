@@ -167,7 +167,8 @@ export class BankAccountPrismaRepository implements BankAccountRepository {
 
     const bankAccountOnDatabase = await repository.update({
       where: {
-        id: bankAccountId
+        id: bankAccountId,
+        isActive: true
       },
       data: {
         balance: {
@@ -202,7 +203,8 @@ export class BankAccountPrismaRepository implements BankAccountRepository {
 
     const bankAccountOnDatabase = await repository.update({
       where: {
-        id: bankAccountId
+        id: bankAccountId,
+        isActive: true
       },
       data: {
         balance: {

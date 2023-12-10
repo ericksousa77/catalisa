@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Instala as dependências do projeto
-RUN npm install
+RUN yarn install
 
 # Copia o código-fonte da aplicação para o diretório de trabalho
 COPY . .

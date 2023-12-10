@@ -689,6 +689,32 @@ describe('Bank Account Controller (e2e)', () => {
       expect(isActive).toEqual(true)
     })
 
+    it('should throw error if bank account to deposit is deactivated', async () => {
+      const bankAccountEntity = BankAccountEntity.create({
+        agency: 'Mocked Agency 123',
+        type: 'CORRENTE',
+        balance: 100,
+        isActive: false
+      })
+
+      await bankAccountRepository.save(bankAccountEntity)
+
+      const amountToDeposit = 1500
+
+      const response = await request(app.getHttpServer())
+        .put(`/bank-accounts/${bankAccountEntity.id}/deposit`)
+        .send({
+          value: amountToDeposit
+        })
+
+      const { statusCode, message } = response.body
+
+      expect(response.status).toEqual(404)
+
+      expect(statusCode).toBe(404)
+      expect(message).toBe('Not Found')
+    })
+
     it('should throw error if bank account to deposit not exists on database', async () => {
       const mockedUUID = '34c65aa9-0fc8-4f87-8696-5b1448a06ac4'
 
@@ -809,6 +835,32 @@ describe('Bank Account Controller (e2e)', () => {
       expect(updatedAt).toBeDefined()
       expect(balance).toEqual(bankAccountEntity.balance - amountToWithdraw)
       expect(isActive).toEqual(true)
+    })
+
+    it('should throw error if bank account to withdraw is deactivated', async () => {
+      const bankAccountEntity = BankAccountEntity.create({
+        agency: 'Mocked Agency 123',
+        type: 'CORRENTE',
+        balance: 2300,
+        isActive: false
+      })
+
+      await bankAccountRepository.save(bankAccountEntity)
+
+      const amountToWithdraw = 300
+
+      const response = await request(app.getHttpServer())
+        .put(`/bank-accounts/${bankAccountEntity.id}/withdraw`)
+        .send({
+          value: amountToWithdraw
+        })
+
+      const { statusCode, message } = response.body
+
+      expect(response.status).toEqual(404)
+
+      expect(statusCode).toBe(404)
+      expect(message).toBe('Not Found')
     })
 
     it('should throw error if amount to withdraw is greather then current bank account balance', async () => {
