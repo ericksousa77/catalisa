@@ -40,4 +40,10 @@ export abstract class BankAccountRepository {
     amountToDeposit: number,
     transaction?: Prisma.TransactionClient
   ): Promise<BankAccountEntity>
+
+  abstract decrementBalance(
+    bankAccountId: string,
+    amountToWithdraw: number,
+    transaction?: Prisma.TransactionClient
+  ): Promise<BankAccountEntity>
 }

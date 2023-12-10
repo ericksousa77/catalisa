@@ -26,7 +26,8 @@ describe('BankAccountManagementService', () => {
             deactivateBankAccount: jest.fn(),
             findOne: jest.fn(),
             findAll: jest.fn(),
-            incrementBalance: jest.fn()
+            incrementBalance: jest.fn(),
+            decrementBalance: jest.fn()
           }
         }
       ]
@@ -256,7 +257,7 @@ describe('BankAccountManagementService', () => {
   })
 
   describe('depositOnBankAccount', () => {
-    it('should call bank account repository function to update bank account balance and return bank account updated', async () => {
+    it('should call bank account repository function to increment bank account balance and return bank account updated', async () => {
       const bankAccountEntity = BankAccountEntity.create({
         agency: 'Mocked Agency',
         type: 'POUPANCA',
@@ -323,6 +324,112 @@ describe('BankAccountManagementService', () => {
       }).rejects.toThrow(BadRequestException)
 
       expect(bankAccountRepository.incrementBalance).toBeCalledTimes(0)
+    })
+  })
+
+  describe('withdrawOnBankAccount', () => {
+    it('should call bank account repository function to decrement bank account balance and return bank account updated', async () => {
+      const bankAccountEntity = BankAccountEntity.create({
+        agency: 'Mocked Agency',
+        type: 'POUPANCA',
+        balance: 2500
+      })
+
+      const amountToWithdraw = 500
+
+      jest
+        .spyOn(service, 'findOneBankAccount')
+        .mockResolvedValue(bankAccountEntity)
+
+      jest.spyOn(bankAccountRepository, 'decrementBalance').mockResolvedValue({
+        ...bankAccountEntity,
+        balance: bankAccountEntity.balance - amountToWithdraw
+      })
+
+      const result = await service.withdrawOnBankAccount(
+        bankAccountEntity.id,
+        amountToWithdraw
+      )
+
+      expect(bankAccountRepository.decrementBalance).toBeCalledTimes(1)
+      expect(bankAccountRepository.decrementBalance).toBeCalledWith(
+        bankAccountEntity.id,
+        amountToWithdraw
+      )
+
+      expect(result).toEqual({
+        ...bankAccountEntity,
+        balance: bankAccountEntity.balance - amountToWithdraw
+      })
+    })
+
+    it('should throw error if amount to withdraw is zero', async () => {
+      const bankAccountEntity = BankAccountEntity.create({
+        agency: 'Mocked Agency',
+        type: 'POUPANCA',
+        balance: 100
+      })
+
+      const amountToWithdraw = 0
+
+      jest
+        .spyOn(service, 'findOneBankAccount')
+        .mockResolvedValue(bankAccountEntity)
+
+      await expect(async () => {
+        await service.withdrawOnBankAccount(
+          bankAccountEntity.id,
+          amountToWithdraw
+        )
+      }).rejects.toThrow(BadRequestException)
+
+      expect(bankAccountRepository.decrementBalance).toBeCalledTimes(0)
+    })
+
+    it('should throw error if amount to withdraw is negative number', async () => {
+      const bankAccountEntity = BankAccountEntity.create({
+        agency: 'Mocked Agency',
+        type: 'POUPANCA',
+        balance: 100
+      })
+
+      jest
+        .spyOn(service, 'findOneBankAccount')
+        .mockResolvedValue(bankAccountEntity)
+
+      const amountToWithdraw = -1
+
+      await expect(async () => {
+        await service.withdrawOnBankAccount(
+          bankAccountEntity.id,
+          amountToWithdraw
+        )
+      }).rejects.toThrow(BadRequestException)
+
+      expect(bankAccountRepository.decrementBalance).toBeCalledTimes(0)
+    })
+
+    it('should throw error if amount to withdraw is greather then current bank account balance', async () => {
+      const bankAccountEntity = BankAccountEntity.create({
+        agency: 'Mocked Agency',
+        type: 'POUPANCA',
+        balance: 100
+      })
+
+      jest
+        .spyOn(service, 'findOneBankAccount')
+        .mockResolvedValue(bankAccountEntity)
+
+      const amountToWithdraw = 200
+
+      await expect(async () => {
+        await service.withdrawOnBankAccount(
+          bankAccountEntity.id,
+          amountToWithdraw
+        )
+      }).rejects.toThrow(BadRequestException)
+
+      expect(bankAccountRepository.decrementBalance).toBeCalledTimes(0)
     })
   })
 })

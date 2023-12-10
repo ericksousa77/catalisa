@@ -61,4 +61,35 @@ export class BankAccountManagementService {
       amountToDeposit
     )
   }
+
+  async withdrawOnBankAccount(
+    bankAccountId: string,
+    amountToWithdraw: number
+  ): Promise<BankAccountEntity> {
+    const bankAccount = await this.findOneBankAccount(bankAccountId)
+
+    this.validateWithdrawAmount(amountToWithdraw, bankAccount.balance)
+
+    return this.bankAccountRepository.decrementBalance(
+      bankAccountId,
+      amountToWithdraw
+    )
+  }
+
+  private validateWithdrawAmount(
+    amountToWithdraw: number,
+    bankAccountBalance: number
+  ) {
+    if (amountToWithdraw <= 0) {
+      throw new BadRequestException(
+        'The amount to be withdraw with must be greater than zero'
+      )
+    }
+
+    if (amountToWithdraw > bankAccountBalance) {
+      throw new BadRequestException(
+        'The amount to be withdrawn cannot be greater than the current balance'
+      )
+    }
+  }
 }

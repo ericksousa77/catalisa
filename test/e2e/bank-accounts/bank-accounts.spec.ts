@@ -678,6 +678,8 @@ describe('Bank Account Controller (e2e)', () => {
       const { id, agency, type, balance, createdAt, updatedAt, isActive } =
         response.body
 
+      expect(response.status).toEqual(200)
+
       expect(id).toEqual(bankAccountEntity.id)
       expect(agency).toBe(bankAccountEntity.agency)
       expect(type).toBe(bankAccountEntity.type)
@@ -766,6 +768,156 @@ describe('Bank Account Controller (e2e)', () => {
       const response = await request(app.getHttpServer())
         .put(`/bank-accounts/${mockedUUID}/deposit`)
         .send({ value: amountToDeposit })
+
+      const { statusCode, message, error } = response.body
+
+      expect(response.status).toEqual(400)
+
+      expect(statusCode).toBe(400)
+      expect(message[0]).toBe('value must not be less than 1')
+      expect(error).toBe('Bad Request')
+    })
+  })
+
+  describe('Bank Account Management - withdraw on bank account', () => {
+    it('should withdraw on bank account and return a bank account updated', async () => {
+      const bankAccountEntity = BankAccountEntity.create({
+        agency: 'Mocked Agency 123',
+        type: 'CORRENTE',
+        balance: 2300
+      })
+
+      await bankAccountRepository.save(bankAccountEntity)
+
+      const amountToWithdraw = 300
+
+      const response = await request(app.getHttpServer())
+        .put(`/bank-accounts/${bankAccountEntity.id}/withdraw`)
+        .send({
+          value: amountToWithdraw
+        })
+
+      const { id, agency, type, balance, createdAt, updatedAt, isActive } =
+        response.body
+
+      expect(response.status).toEqual(200)
+
+      expect(id).toEqual(bankAccountEntity.id)
+      expect(agency).toBe(bankAccountEntity.agency)
+      expect(type).toBe(bankAccountEntity.type)
+      expect(createdAt).toBeDefined()
+      expect(updatedAt).toBeDefined()
+      expect(balance).toEqual(bankAccountEntity.balance - amountToWithdraw)
+      expect(isActive).toEqual(true)
+    })
+
+    it('should throw error if amount to withdraw is greather then current bank account balance', async () => {
+      const bankAccountEntity = BankAccountEntity.create({
+        agency: 'Mocked Agency 123',
+        type: 'CORRENTE',
+        balance: 2300
+      })
+
+      await bankAccountRepository.save(bankAccountEntity)
+
+      const amountToWithdraw = 3000
+
+      const response = await request(app.getHttpServer())
+        .put(`/bank-accounts/${bankAccountEntity.id}/withdraw`)
+        .send({
+          value: amountToWithdraw
+        })
+
+      const { statusCode, message, error } = response.body
+
+      expect(response.status).toEqual(400)
+
+      expect(statusCode).toBe(400)
+      expect(message).toBe(
+        'The amount to be withdrawn cannot be greater than the current balance'
+      )
+      expect(error).toBe('Bad Request')
+    })
+
+    it('should throw error if bank account to withdraw not exists on database', async () => {
+      const mockedUUID = '34c65aa9-0fc8-4f87-8696-5b1448a06ac4'
+
+      const amountToWithdraw = 1500
+
+      const response = await request(app.getHttpServer())
+        .put(`/bank-accounts/${mockedUUID}/withdraw`)
+        .send({ value: amountToWithdraw })
+
+      const { statusCode, message } = response.body
+
+      expect(response.status).toEqual(404)
+
+      expect(statusCode).toBe(404)
+      expect(message).toBe('Not Found')
+    })
+
+    it('should throw error if bankAccountId is sended but is not UUID', async () => {
+      const amountToWithdraw = 1500
+
+      const mockedFakeUUID = '123'
+
+      const response = await request(app.getHttpServer())
+        .put(`/bank-accounts/${mockedFakeUUID}/withdraw`)
+        .send({ value: amountToWithdraw })
+
+      const { statusCode, message, error } = response.body
+
+      expect(response.status).toEqual(400)
+
+      expect(statusCode).toBe(400)
+      expect(message[0]).toBe('bankAccountId must be a UUID')
+      expect(error).toBe('Bad Request')
+    })
+
+    it('should throw error if amount to withdraw is zero', async () => {
+      const mockedUUID = '34c65aa9-0fc8-4f87-8696-5b1448a06ac4'
+
+      const amountToWithdraw = 0
+
+      const response = await request(app.getHttpServer())
+        .put(`/bank-accounts/${mockedUUID}/withdraw`)
+        .send({ value: amountToWithdraw })
+
+      const { statusCode, message, error } = response.body
+
+      expect(response.status).toEqual(400)
+
+      expect(statusCode).toBe(400)
+      expect(message[0]).toBe('value must not be less than 1')
+      expect(error).toBe('Bad Request')
+    })
+
+    it('should throw error if amount to withdraw is negative number', async () => {
+      const mockedUUID = '34c65aa9-0fc8-4f87-8696-5b1448a06ac4'
+
+      const amountToWithdraw = -1
+
+      const response = await request(app.getHttpServer())
+        .put(`/bank-accounts/${mockedUUID}/withdraw`)
+        .send({ value: amountToWithdraw })
+
+      const { statusCode, message, error } = response.body
+
+      expect(response.status).toEqual(400)
+
+      expect(statusCode).toBe(400)
+      expect(message[0]).toBe('value must not be less than 1')
+      expect(error).toBe('Bad Request')
+    })
+
+    it('should throw error if amount to withdraw is not a number', async () => {
+      const mockedUUID = '34c65aa9-0fc8-4f87-8696-5b1448a06ac4'
+
+      const amountToWithdraw = 'mockedNotNumberValueToWithdraw'
+
+      const response = await request(app.getHttpServer())
+        .put(`/bank-accounts/${mockedUUID}/withdraw`)
+        .send({ value: amountToWithdraw })
 
       const { statusCode, message, error } = response.body
 

@@ -1,7 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { BankAccountType } from '@prisma/client'
-import { BankAccountEntity } from '@src/modules/bank-accounts/domain/entities/bank-account.entity'
 import { IsNotEmpty, IsString, IsEnum } from 'class-validator'
+
+import { BankAccountEntity } from '@src/modules/bank-accounts/domain/entities/bank-account.entity'
 
 export class CreateBankAccountInputDto {
   @ApiProperty()

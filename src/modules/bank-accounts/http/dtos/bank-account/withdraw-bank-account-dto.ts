@@ -4,7 +4,7 @@ import { Type } from 'class-transformer'
 
 import { BankAccountEntity } from '@src/modules/bank-accounts/domain/entities/bank-account.entity'
 
-export class DepositBankAccountInputDto {
+export class WithdrawBankAccountInputDto {
   @ApiProperty()
   @IsNotEmpty()
   @Type(() => Number)
@@ -12,10 +12,10 @@ export class DepositBankAccountInputDto {
   value: number
 }
 
-export class DepositBankAccountParamInputDto {
+export class WithdawBankAccountParamInputDto {
   @ApiProperty()
   @IsUUID()
   bankAccountId: string
 }
 
-export class DepositBankAccountOutputDto extends BankAccountEntity {}
+export class WithdrawBankAccountOutputDto extends BankAccountEntity {}
