@@ -6,6 +6,7 @@ import { BankAccountEntity } from '@src/modules/bank-accounts/domain/entities/ba
 import { BankAccountRepository } from '../domain/interfaces/bank-account.repository.interface'
 
 import { PrismaService } from '@src/shared/modules/persistence/prisma.service'
+import { UpdateBankAccountInputDto } from '../http/dtos/bank-account/update-bank-account-dto'
 
 @Injectable()
 export class BankAccountPrismaRepository implements BankAccountRepository {
@@ -18,7 +19,7 @@ export class BankAccountPrismaRepository implements BankAccountRepository {
   async save(
     bankAccountEntity: BankAccountEntity,
     transaction?: Prisma.TransactionClient
-  ) {
+  ): Promise<BankAccountEntity> {
     const repository =
       transaction && transaction instanceof PrismaService
         ? transaction.bankAccount
@@ -33,5 +34,25 @@ export class BankAccountPrismaRepository implements BankAccountRepository {
 
   async clear(): Promise<void> {
     await this.repository.deleteMany()
+  }
+
+  async update(
+    bankAccountId: string,
+    bankAccountEntity: UpdateBankAccountInputDto,
+    transaction?: Prisma.TransactionClient
+  ): Promise<BankAccountEntity> {
+    const repository =
+      transaction && transaction instanceof PrismaService
+        ? transaction.bankAccount
+        : this.repository
+
+    const bankAccountOnDatabase = await repository.update({
+      where: {
+        id: bankAccountId
+      },
+      data: bankAccountEntity
+    })
+
+    return new BankAccountEntity(bankAccountOnDatabase)
   }
 }
