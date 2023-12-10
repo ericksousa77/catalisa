@@ -108,6 +108,8 @@ describe('BankAccountPrismaRepository', () => {
         type: 'POUPANCA'
       })
 
+      const mockedCurrentTimestamp = new Date()
+
       expect(model.update).toBeCalledTimes(1)
       expect(model.update).toHaveBeenCalledWith({
         where: {
@@ -115,7 +117,8 @@ describe('BankAccountPrismaRepository', () => {
         },
         data: {
           agency: 'New Mocked Agency',
-          type: 'POUPANCA'
+          type: 'POUPANCA',
+          updatedAt: mockedCurrentTimestamp
         }
       })
 
@@ -139,6 +142,8 @@ describe('BankAccountPrismaRepository', () => {
         accountNumber: 1
       })
 
+      const mockedCurrentTimestamp = new Date()
+
       model.update.mockResolvedValue({
         ...activeBankAccount,
         isActive: false
@@ -154,7 +159,8 @@ describe('BankAccountPrismaRepository', () => {
           id: activeBankAccount.id
         },
         data: {
-          isActive: false
+          isActive: false,
+          updatedAt: mockedCurrentTimestamp
         }
       })
 
