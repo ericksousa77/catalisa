@@ -284,6 +284,8 @@ describe('Bank Account Controller (e2e)', () => {
       const { id, agency, type, balance, createdAt, updatedAt, isActive } =
         response.body
 
+      expect(response.status).toEqual(200)
+
       expect(id).toEqual(activeBankAccountEntity.id)
       expect(agency).toBe(activeBankAccountEntity.agency)
       expect(type).toBe(activeBankAccountEntity.type)
@@ -325,7 +327,7 @@ describe('Bank Account Controller (e2e)', () => {
     })
   })
 
-  describe('Bank Account Management - findOne bank account', () => {
+  describe('Bank Account Management - find one bank account', () => {
     it('should find by id and return a bank account', async () => {
       const bankAccountEntity = BankAccountEntity.create({
         agency: 'Mocked Agency 123',
@@ -340,8 +342,6 @@ describe('Bank Account Controller (e2e)', () => {
         `/bank-accounts/${bankAccountEntity.id}`
       )
 
-      console.log(response.body)
-
       const {
         id,
         agency,
@@ -352,6 +352,8 @@ describe('Bank Account Controller (e2e)', () => {
         isActive,
         Transactions
       } = response.body
+
+      expect(response.status).toEqual(200)
 
       expect(id).toEqual(bankAccountEntity.id)
       expect(agency).toBe(bankAccountEntity.agency)
@@ -393,6 +395,178 @@ describe('Bank Account Controller (e2e)', () => {
 
       expect(statusCode).toBe(400)
       expect(message[0]).toBe('bankAccountId must be a UUID')
+      expect(error).toBe('Bad Request')
+    })
+  })
+
+  describe('Bank Account Management - find all bank account', () => {
+    it('should find all bank accounts and return without pagination', async () => {
+      //irei criar as contas bancárias sem promise all para garantir o controle da ordem de crição
+      const firstBankAccountEntity = BankAccountEntity.create({
+        agency: 'Mocked Agency 121',
+        type: 'CORRENTE',
+        balance: 0,
+        isActive: true
+      })
+
+      await bankAccountRepository.save(firstBankAccountEntity)
+
+      const secondBankAccountEntity = BankAccountEntity.create({
+        agency: 'Mocked Agency 122',
+        type: 'POUPANCA',
+        balance: 0,
+        isActive: true
+      })
+
+      await bankAccountRepository.save(secondBankAccountEntity)
+
+      const response = await request(app.getHttpServer()).get('/bank-accounts')
+
+      const { page, pageSize, pageCount, total, bankAccounts } = response.body
+
+      expect(response.status).toEqual(200)
+
+      //validate first bank account validations
+      expect(bankAccounts[0].id).toEqual(firstBankAccountEntity.id)
+      expect(bankAccounts[0].agency).toBe(firstBankAccountEntity.agency)
+      expect(bankAccounts[0].type).toBe(firstBankAccountEntity.type)
+      expect(bankAccounts[0].createdAt).toBeDefined()
+      expect(bankAccounts[0].updatedAt).toBeDefined()
+      expect(bankAccounts[0].balance).toEqual(firstBankAccountEntity.balance)
+      expect(bankAccounts[0].isActive).toEqual(firstBankAccountEntity.isActive)
+
+      //validate second bank account validations
+      expect(bankAccounts[1].id).toEqual(secondBankAccountEntity.id)
+      expect(bankAccounts[1].agency).toBe(secondBankAccountEntity.agency)
+      expect(bankAccounts[1].type).toBe(secondBankAccountEntity.type)
+      expect(bankAccounts[1].createdAt).toBeDefined()
+      expect(bankAccounts[1].updatedAt).toBeDefined()
+      expect(bankAccounts[1].balance).toEqual(secondBankAccountEntity.balance)
+      expect(bankAccounts[1].isActive).toEqual(secondBankAccountEntity.isActive)
+
+      //validate pagination parameters
+      expect(page).toBeUndefined()
+      expect(pageSize).toBeUndefined()
+      expect(pageCount).toBeUndefined()
+      expect(total).toBeUndefined()
+    })
+
+    it('should find all bank accounts and return with pagination', async () => {
+      //irei criar as contas bancárias sem promise all para garantir o controle da ordem de crição
+      const firstBankAccountEntity = BankAccountEntity.create({
+        agency: 'Mocked Agency 123',
+        type: 'CORRENTE',
+        balance: 0,
+        isActive: true
+      })
+
+      await bankAccountRepository.save(firstBankAccountEntity)
+
+      const secondBankAccountEntity = BankAccountEntity.create({
+        agency: 'Mocked Agency 124',
+        type: 'POUPANCA',
+        balance: 0,
+        isActive: true
+      })
+
+      await bankAccountRepository.save(secondBankAccountEntity)
+
+      const response = await request(app.getHttpServer())
+        .get('/bank-accounts')
+        .query({ page: 1, pageSize: 2 })
+
+      const { page, pageSize, pageCount, total, bankAccounts } = response.body
+
+      expect(response.status).toEqual(200)
+
+      //validate first bank account validations
+      expect(bankAccounts[0].id).toEqual(firstBankAccountEntity.id)
+      expect(bankAccounts[0].agency).toBe(firstBankAccountEntity.agency)
+      expect(bankAccounts[0].type).toBe(firstBankAccountEntity.type)
+      expect(bankAccounts[0].createdAt).toBeDefined()
+      expect(bankAccounts[0].updatedAt).toBeDefined()
+      expect(bankAccounts[0].balance).toEqual(firstBankAccountEntity.balance)
+      expect(bankAccounts[0].isActive).toEqual(firstBankAccountEntity.isActive)
+
+      //validate second bank account validations
+      expect(bankAccounts[1].id).toEqual(secondBankAccountEntity.id)
+      expect(bankAccounts[1].agency).toBe(secondBankAccountEntity.agency)
+      expect(bankAccounts[1].type).toBe(secondBankAccountEntity.type)
+      expect(bankAccounts[1].createdAt).toBeDefined()
+      expect(bankAccounts[1].updatedAt).toBeDefined()
+      expect(bankAccounts[1].balance).toEqual(secondBankAccountEntity.balance)
+      expect(bankAccounts[1].isActive).toEqual(secondBankAccountEntity.isActive)
+
+      //validate pagination parameters
+      expect(page).toEqual(1)
+      expect(pageSize).toEqual(2)
+      expect(pageCount).toEqual(1)
+      expect(total).toEqual(2)
+    })
+
+    it('should return a empty array if not exists bank account on database without pagination', async () => {
+      const response = await request(app.getHttpServer()).get('/bank-accounts')
+
+      const { bankAccounts, page, pageSize, pageCount, total } = response.body
+
+      expect(response.status).toEqual(200)
+
+      expect(bankAccounts).toEqual([])
+
+      //validate pagination parameters
+      expect(page).toBeUndefined()
+      expect(pageSize).toBeUndefined()
+      expect(pageCount).toBeUndefined()
+      expect(total).toBeUndefined()
+    })
+
+    it('should return a empty array if not exists bank account on database with pagination', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/bank-accounts')
+        .query({ page: 1, pageSize: 2 })
+
+      const { bankAccounts, page, pageSize, pageCount, total } = response.body
+
+      expect(response.status).toEqual(200)
+
+      expect(bankAccounts).toEqual([])
+
+      //validate pagination parameters
+      expect(page).toEqual(1)
+      expect(pageSize).toEqual(2)
+      expect(pageCount).toEqual(0)
+      expect(total).toEqual(0)
+    })
+
+    it('should throw error if page is sended but is not a number', async () => {
+      const mockedNotNumberPage = 'casa'
+
+      const response = await request(app.getHttpServer())
+        .get('/bank-accounts')
+        .query({ page: mockedNotNumberPage, pageSize: 2 })
+
+      const { statusCode, message, error } = response.body
+
+      expect(response.status).toEqual(400)
+
+      expect(statusCode).toBe(400)
+      expect(message[0]).toBe('page must not be less than 1')
+      expect(error).toBe('Bad Request')
+    })
+
+    it('should throw error if pageSize is sended but is not a number', async () => {
+      const mockedNotNumberPageSize = 'casa'
+
+      const response = await request(app.getHttpServer())
+        .get('/bank-accounts')
+        .query({ page: 1, pageSize: mockedNotNumberPageSize })
+
+      const { statusCode, message, error } = response.body
+
+      expect(response.status).toEqual(400)
+
+      expect(statusCode).toBe(400)
+      expect(message[0]).toBe('pageSize must not be less than 1')
       expect(error).toBe('Bad Request')
     })
   })
