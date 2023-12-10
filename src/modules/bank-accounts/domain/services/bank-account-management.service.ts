@@ -10,7 +10,7 @@ import { UpdateBankAccountInputDto } from '@src/modules/bank-accounts/http/dtos/
 @Injectable()
 export class BankAccountManagementService {
   constructor(private readonly bankAccountRepository: BankAccountRepository) {}
-  async create(
+  async createBankAccount(
     bankAccountProps: CreateBankAccountInputDto
   ): Promise<BankAccountEntity> {
     const bankAccountEntity = BankAccountEntity.create({
@@ -21,7 +21,7 @@ export class BankAccountManagementService {
     return this.bankAccountRepository.save(bankAccountEntity)
   }
 
-  async update(
+  async updateBankAccount(
     bankAccountId: string,
     bankAccountProps: UpdateBankAccountInputDto
   ): Promise<BankAccountEntity> {
@@ -32,5 +32,9 @@ export class BankAccountManagementService {
     bankAccountId: string
   ): Promise<BankAccountEntity> {
     return this.bankAccountRepository.deactivateBankAccount(bankAccountId)
+  }
+
+  async findOneBankAccount(bankAccountId: string): Promise<BankAccountEntity> {
+    return this.bankAccountRepository.findOne(bankAccountId)
   }
 }

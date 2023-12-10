@@ -22,7 +22,8 @@ describe('BankAccountManagementService', () => {
           useValue: {
             save: jest.fn(),
             update: jest.fn(),
-            deactivateBankAccount: jest.fn()
+            deactivateBankAccount: jest.fn(),
+            findOne: jest.fn()
           }
         }
       ]
@@ -56,7 +57,7 @@ describe('BankAccountManagementService', () => {
         isActive: true
       })
 
-      const result = await service.create(bankAccountToCreateProps)
+      const result = await service.createBankAccount(bankAccountToCreateProps)
 
       expect(bankAccountRepository.save).toBeCalledTimes(1)
       expect(bankAccountRepository.save).toBeCalledWith(
@@ -95,7 +96,7 @@ describe('BankAccountManagementService', () => {
         type: 'CORRENTE'
       })
 
-      const result = await service.update(
+      const result = await service.updateBankAccount(
         oldBankAccountEntity.id,
         bankAccountToUpdateProps
       )
@@ -146,6 +147,33 @@ describe('BankAccountManagementService', () => {
         ...activeBankAccountEntity,
         isActive: false
       })
+    })
+  })
+
+  describe('findOne', () => {
+    it('should call bank account repository function to find one bank account by ID and return', async () => {
+      const activeBankAccountEntity = BankAccountEntity.create({
+        agency: 'Mocked Agency',
+        type: 'POUPANCA',
+        balance: 0,
+        isActive: true,
+        accountNumber: 2
+      })
+
+      jest
+        .spyOn(bankAccountRepository, 'findOne')
+        .mockResolvedValue(activeBankAccountEntity)
+
+      const result = await service.findOneBankAccount(
+        activeBankAccountEntity.id
+      )
+
+      expect(bankAccountRepository.findOne).toBeCalledTimes(1)
+      expect(bankAccountRepository.findOne).toBeCalledWith(
+        activeBankAccountEntity.id
+      )
+
+      expect(result).toEqual(activeBankAccountEntity)
     })
   })
 })
