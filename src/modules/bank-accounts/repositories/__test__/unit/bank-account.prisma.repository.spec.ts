@@ -6,6 +6,9 @@ import { BankAccountPrismaRepository } from '@src/modules/bank-accounts/reposito
 
 import { PrismaService } from '@src/shared/modules/persistence/prisma.service'
 
+jest.useFakeTimers()
+jest.setSystemTime(new Date('2023-10-30T00:00:00.000Z'))
+
 describe('BankAccountPrismaRepository', () => {
   let bankAccountRepository: BankAccountPrismaRepository
   let prismaService: PrismaService
@@ -274,6 +277,56 @@ describe('BankAccountPrismaRepository', () => {
       expect(result.pageSize).toEqual(2)
       expect(result.pageCount).toEqual(1)
       expect(result.total).toEqual(2)
+    })
+  })
+
+  describe('updateBalance', () => {
+    it('should call prisma method to update bank account balance on database and return updated bank account entity', async () => {
+      const bankAccount = BankAccountEntity.create({
+        agency: 'Mocked Agency',
+        type: 'CORRENTE',
+        balance: 2000
+      })
+
+      model.update.mockResolvedValue({
+        ...bankAccount,
+        balance: 3000
+      })
+
+      const amountToDeposit = 1000
+
+      const mockedCurrentTimestamp = new Date()
+
+      const result = await bankAccountRepository.incrementBalance(
+        bankAccount.id,
+        amountToDeposit
+      )
+
+      expect(model.update).toBeCalledTimes(1)
+      expect(model.update).toHaveBeenCalledWith({
+        where: {
+          id: bankAccount.id
+        },
+        data: {
+          balance: {
+            increment: amountToDeposit
+          },
+          Transactions: {
+            create: {
+              id: expect.any(String),
+              createdAt: mockedCurrentTimestamp,
+              type: 'DEPOSITO',
+              value: amountToDeposit
+            }
+          },
+          updatedAt: mockedCurrentTimestamp
+        }
+      })
+
+      expect(result).toEqual({
+        ...bankAccount,
+        balance: 3000
+      })
     })
   })
 })
