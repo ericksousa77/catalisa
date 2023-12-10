@@ -1,0 +1,5 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Adicione os comandos que deseja executar
+npm run format && npm run test
