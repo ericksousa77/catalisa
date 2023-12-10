@@ -2,6 +2,7 @@ import { INestApplication, ValidationPipe } from '@nestjs/common'
 import request from 'supertest'
 import { HttpAdapterHost } from '@nestjs/core'
 import { Test, TestingModule } from '@nestjs/testing'
+import { randomUUID } from 'crypto'
 
 import { AppModule } from '@src/app.module'
 import { PersistenceModule } from '@src/shared/modules/persistence/persistence.module'
@@ -374,7 +375,83 @@ describe('Bank Account Controller (e2e)', () => {
       expect(Transactions).toEqual([])
     })
 
-    // TODO: futuramente adicionar um caso de teste em que é retornado uma conta que contem transações. Nesse teste validar as transações também
+    it('should find by id and return a bank account with transactions', async () => {
+      const bankAccountEntity = BankAccountEntity.create({
+        agency: 'Mocked Agency 123',
+        type: 'CORRENTE',
+        balance: 1000 + 500 /*deposit*/ - 200 /*withdraw*/,
+        isActive: true
+      })
+
+      await bankAccountRepository.save(bankAccountEntity)
+
+      const mockedCurrentTimestamp = new Date()
+
+      //transactions criadas uma por vez para garantir a ordem de criação
+      const depositTransaction = await prismaService.transaction.create({
+        data: {
+          id: randomUUID(),
+          type: 'DEPOSITO',
+          value: 500,
+          bankAccountId: bankAccountEntity.id,
+          createdAt: mockedCurrentTimestamp
+        }
+      })
+
+      const withdrawTransaction = await prismaService.transaction.create({
+        data: {
+          id: randomUUID(),
+          type: 'SAQUE',
+          value: 200,
+          bankAccountId: bankAccountEntity.id,
+          createdAt: mockedCurrentTimestamp
+        }
+      })
+
+      const response = await request(app.getHttpServer()).get(
+        `/bank-accounts/${bankAccountEntity.id}`
+      )
+
+      const {
+        id,
+        agency,
+        type,
+        balance,
+        createdAt,
+        updatedAt,
+        isActive,
+        Transactions
+      } = response.body
+
+      expect(response.status).toEqual(200)
+
+      //bank account validations
+      expect(id).toEqual(bankAccountEntity.id)
+      expect(agency).toBe(bankAccountEntity.agency)
+      expect(type).toBe(bankAccountEntity.type)
+      expect(createdAt).toBeDefined()
+      expect(updatedAt).toBeDefined()
+      expect(balance).toEqual(bankAccountEntity.balance)
+      expect(isActive).toEqual(bankAccountEntity.isActive)
+
+      //transactions validation
+
+      //deposit transaction validation
+      expect(Transactions[0].value).toEqual(depositTransaction.value)
+      expect(Transactions[0].type).toEqual(depositTransaction.type)
+      expect(Transactions[0].bankAccountId).toEqual(
+        depositTransaction.bankAccountId
+      )
+      expect(Transactions[0].createdAt).toBeDefined()
+
+      //withdraw transaction validation
+      expect(Transactions[1].value).toEqual(withdrawTransaction.value)
+      expect(Transactions[1].type).toEqual(withdrawTransaction.type)
+      expect(Transactions[1].bankAccountId).toEqual(
+        withdrawTransaction.bankAccountId
+      )
+      expect(Transactions[1].createdAt).toBeDefined()
+    })
 
     it('should throw error if bank account to show not exists on database', async () => {
       const mockedUUID = '34c65aa9-0fc8-4f87-8696-5b1448a06ac4'

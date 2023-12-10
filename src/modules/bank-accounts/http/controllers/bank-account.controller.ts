@@ -136,13 +136,13 @@ export class BankAccountController {
   @HttpCode(HttpStatus.OK)
   /* Swagger Doc */
   @ApiOperation({
-    summary: 'Bank Account Show',
-    description: 'Find one bank account by ID'
+    summary: 'Bank Account Index',
+    description: 'Find all bank accounts'
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'Bank Account found by id',
-    type: ShowBankAccountOutputDto
+    description: 'Bank Accounts',
+    type: GetAllBankAccountsOutputDto
   })
   /* function */
   async findAllBankAccounts(
@@ -163,13 +163,13 @@ export class BankAccountController {
   @HttpCode(HttpStatus.OK)
   /* Swagger Doc */
   @ApiOperation({
-    summary: 'Bank Account Update',
-    description: 'Update a bank account on the system'
+    summary: 'Bank Account deposit',
+    description: 'deposit into bank account'
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'Bank Account updated',
-    type: UpdateBankAccountOutputDto
+    description: 'Bank Account balance incremented',
+    type: DepositBankAccountOutputDto
   })
   /* function */
   async depositBankAccount(
