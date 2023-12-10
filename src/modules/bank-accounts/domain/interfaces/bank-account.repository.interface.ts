@@ -16,4 +16,9 @@ export abstract class BankAccountRepository {
     bankAccount: UpdateBankAccountInputDto,
     transaction?: Prisma.TransactionClient
   ): Promise<BankAccountEntity>
+
+  abstract deactivateBankAccount(
+    bankAccountId: string,
+    transaction?: Prisma.TransactionClient
+  ): Promise<BankAccountEntity>
 }
