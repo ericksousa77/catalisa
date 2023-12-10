@@ -9,6 +9,7 @@ import { BankAccountRepository } from '@src/modules/bank-accounts/domain/interfa
 import { PrismaService } from '@src/shared/modules/persistence/prisma.service'
 
 import { UpdateBankAccountInputDto } from '@src/modules/bank-accounts/http/dtos/bank-account/update-bank-account-dto'
+import { GetAllBankAccountsOutputDto } from '@src/modules/bank-accounts/http/dtos/bank-account/get-all-bank-accounts-dto'
 
 @Injectable()
 export class BankAccountPrismaRepository implements BankAccountRepository {
@@ -31,7 +32,7 @@ export class BankAccountPrismaRepository implements BankAccountRepository {
       data: bankAccountEntity
     })
 
-    return bankAccountOnDatabase
+    return new BankAccountEntity(bankAccountOnDatabase)
   }
 
   async clear(): Promise<void> {
@@ -97,11 +98,56 @@ export class BankAccountPrismaRepository implements BankAccountRepository {
       }
     })
 
-    const bankAccoutEntity = plainToInstance(
+    const bankAccountEntity = plainToInstance(
       BankAccountEntity,
       bankAccountOnDatabase
     )
 
-    return bankAccoutEntity
+    return bankAccountEntity
+  }
+
+  async findAll(
+    page?: number,
+    pageSize?: number,
+    transaction?: Prisma.TransactionClient
+  ): Promise<GetAllBankAccountsOutputDto> {
+    const repository =
+      transaction && transaction instanceof PrismaService
+        ? transaction.bankAccount
+        : this.repository
+
+    const paginationParamsForQuery = {
+      take: pageSize,
+      skip: (Number(page) - 1) * Number(pageSize)
+    }
+
+    const [bankAccountsOnDatabase, total] = await Promise.all([
+      repository.findMany({
+        ...(!!page && !!pageSize ? paginationParamsForQuery : {}),
+        orderBy: {
+          accountNumber: 'asc'
+        }
+      }),
+      repository.count()
+    ])
+
+    const bankAccountEntities: BankAccountEntity[] = plainToInstance(
+      BankAccountEntity,
+      bankAccountsOnDatabase
+    )
+
+    const pageCount = Math.ceil(total / Number(pageSize))
+
+    if (!!page && !!pageSize) {
+      return {
+        bankAccounts: bankAccountEntities,
+        page,
+        pageSize,
+        total,
+        pageCount
+      }
+    }
+
+    return { bankAccounts: bankAccountEntities }
   }
 }
