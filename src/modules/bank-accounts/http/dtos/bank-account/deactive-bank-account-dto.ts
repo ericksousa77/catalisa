@@ -3,10 +3,10 @@ import { IsUUID } from 'class-validator'
 
 import { BankAccountEntity } from '@src/modules/bank-accounts/domain/entities/bank-account.entity'
 
-export class UpdateBankAccountParamInputDto {
+export class DeactivateBankAccountParamInputDto {
   @ApiProperty()
   @IsUUID()
   bankAccountId: string
 }
 
-export class UpdateBankAccountOutputDto extends BankAccountEntity {}
+export class DeactivateBankAccountOutputDto extends BankAccountEntity {}

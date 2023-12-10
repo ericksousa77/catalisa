@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
 
 import { ConfigModule } from '@src/shared/modules/config/config.module'
+import { PersistenceModule } from '@src/shared/modules/persistence/persistence.module'
 
 import { BankAccountController } from '@src/modules/bank-accounts/http/controllers/bank-account.controller'
 
@@ -11,7 +12,7 @@ import { BankAccountRepository } from '@src/modules/bank-accounts/domain/interfa
 import { BankAccountPrismaRepository } from '@src/modules/bank-accounts/repositories/bank-account.prisma.repository'
 
 @Module({
-  imports: [ConfigModule.forRoot()],
+  imports: [ConfigModule.forRoot(), PersistenceModule],
   controllers: [BankAccountController],
   providers: [
     BankAccountManagementService,

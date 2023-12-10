@@ -6,7 +6,8 @@ import {
   HttpStatus,
   Put,
   Param,
-  Delete
+  Delete,
+  Get
 } from '@nestjs/common'
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 
@@ -21,6 +22,14 @@ import {
   UpdateBankAccountOutputDto,
   UpdateBankAccountParamInputDto
 } from '../dtos/bank-account/update-bank-account-dto'
+import {
+  DeactivateBankAccountOutputDto,
+  DeactivateBankAccountParamInputDto
+} from '../dtos/bank-account/deactive-bank-account-dto'
+import {
+  ShowBankAccountOutputDto,
+  ShowBankAccountParamInputDto
+} from '../dtos/bank-account/show-bank-account-dto'
 
 @ApiTags('bank-accounts')
 @Controller('bank-accounts')
@@ -45,7 +54,7 @@ export class BankAccountController {
   async createBankAccount(
     @Body() bankAccountData: CreateBankAccountInputDto
   ): Promise<CreateBankAccountOutputDto> {
-    return this.bankAccountManagementService.create(bankAccountData)
+    return this.bankAccountManagementService.createBankAccount(bankAccountData)
   }
 
   @Put(':bankAccountId') // route HTTP method definition
@@ -58,14 +67,14 @@ export class BankAccountController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Bank Account updated',
-    type: CreateBankAccountOutputDto
+    type: UpdateBankAccountOutputDto
   })
   /* function */
   async updateBankAccount(
     @Param() params: UpdateBankAccountParamInputDto,
     @Body() bankAccountData: UpdateBankAccountInputDto
   ): Promise<UpdateBankAccountOutputDto> {
-    return this.bankAccountManagementService.update(
+    return this.bankAccountManagementService.updateBankAccount(
       params.bankAccountId,
       bankAccountData
     )
@@ -81,13 +90,34 @@ export class BankAccountController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Bank Account update to inactived',
-    type: CreateBankAccountOutputDto
+    type: DeactivateBankAccountOutputDto
   })
   /* function */
   async deactivateBankAccount(
-    @Param() params: UpdateBankAccountParamInputDto
-  ): Promise<UpdateBankAccountOutputDto> {
+    @Param() params: DeactivateBankAccountParamInputDto
+  ): Promise<DeactivateBankAccountOutputDto> {
     return this.bankAccountManagementService.deactivateBankAccount(
+      params.bankAccountId
+    )
+  }
+
+  @Get(':bankAccountId') // route HTTP method definition
+  @HttpCode(HttpStatus.OK)
+  /* Swagger Doc */
+  @ApiOperation({
+    summary: 'Bank Account Show',
+    description: 'Find one bank account by ID'
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Bank Account found by id',
+    type: ShowBankAccountOutputDto
+  })
+  /* function */
+  async findOneBankAccount(
+    @Param() params: ShowBankAccountParamInputDto
+  ): Promise<ShowBankAccountOutputDto> {
+    return this.bankAccountManagementService.findOneBankAccount(
       params.bankAccountId
     )
   }

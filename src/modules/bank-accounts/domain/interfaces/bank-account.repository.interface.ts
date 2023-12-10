@@ -21,4 +21,9 @@ export abstract class BankAccountRepository {
     bankAccountId: string,
     transaction?: Prisma.TransactionClient
   ): Promise<BankAccountEntity>
+
+  abstract findOne(
+    bankAccountId: string,
+    transaction?: Prisma.TransactionClient
+  ): Promise<BankAccountEntity>
 }
