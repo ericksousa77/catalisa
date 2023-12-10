@@ -21,7 +21,8 @@ describe('BankAccountPrismaRepository', () => {
           useValue: {
             bankAccount: {
               create: jest.fn(),
-              deleteMany: jest.fn()
+              deleteMany: jest.fn(),
+              update: jest.fn()
             }
           }
         }
@@ -77,6 +78,48 @@ describe('BankAccountPrismaRepository', () => {
 
       expect(model.deleteMany).toBeCalledTimes(1)
       expect(model.deleteMany).toHaveBeenCalledWith()
+    })
+  })
+
+  describe('update', () => {
+    it('should call prisma method to update bank account on database and return updated bank account entity', async () => {
+      const oldBankAccount = BankAccountEntity.create({
+        agency: 'Mocked Agency',
+        type: 'CORRENTE',
+        balance: 2000
+      })
+
+      model.update.mockResolvedValue({
+        ...oldBankAccount,
+        agency: 'New Mocked Agency',
+        type: 'POUPANCA',
+        accountNumber: 1,
+        isActive: true
+      })
+
+      const result = await bankAccountRepository.update(oldBankAccount.id, {
+        agency: 'New Mocked Agency',
+        type: 'POUPANCA'
+      })
+
+      expect(model.update).toBeCalledTimes(1)
+      expect(model.update).toHaveBeenCalledWith({
+        where: {
+          id: oldBankAccount.id
+        },
+        data: {
+          agency: 'New Mocked Agency',
+          type: 'POUPANCA'
+        }
+      })
+
+      expect(result).toEqual({
+        ...oldBankAccount,
+        agency: 'New Mocked Agency',
+        type: 'POUPANCA',
+        accountNumber: 1,
+        isActive: true
+      })
     })
   })
 })
