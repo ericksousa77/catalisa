@@ -34,7 +34,6 @@ async function bootstrap() {
     .setTitle('Catalisa Backend')
     .setDescription('Catalisa API documentation')
     .setVersion('1.0')
-    .addBearerAuth()
     .build()
 
   const document = SwaggerModule.createDocument(app, config)

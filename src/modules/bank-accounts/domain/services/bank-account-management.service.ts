@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { BadRequestException, Injectable } from '@nestjs/common'
 
 import { BankAccountEntity } from '@src/modules/bank-accounts/domain/entities/bank-account.entity'
 
@@ -44,5 +44,21 @@ export class BankAccountManagementService {
     pageSize?: number
   ): Promise<GetAllBankAccountsOutputDto> {
     return this.bankAccountRepository.findAll(page, pageSize)
+  }
+
+  async depositOnBankAccount(
+    bankAccountId: string,
+    amountToDeposit: number
+  ): Promise<BankAccountEntity> {
+    if (amountToDeposit <= 0) {
+      throw new BadRequestException(
+        'The amount to be deposited must be greater than zero'
+      )
+    }
+
+    return this.bankAccountRepository.incrementBalance(
+      bankAccountId,
+      amountToDeposit
+    )
   }
 }

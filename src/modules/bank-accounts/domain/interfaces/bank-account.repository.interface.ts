@@ -34,4 +34,10 @@ export abstract class BankAccountRepository {
     pageSize?: number,
     transaction?: Prisma.TransactionClient
   ): Promise<GetAllBankAccountsOutputDto>
+
+  abstract incrementBalance(
+    bankAccountId: string,
+    amountToDeposit: number,
+    transaction?: Prisma.TransactionClient
+  ): Promise<BankAccountEntity>
 }

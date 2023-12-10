@@ -10,6 +10,7 @@ import { PrismaService } from '@src/shared/modules/persistence/prisma.service'
 
 import { UpdateBankAccountInputDto } from '@src/modules/bank-accounts/http/dtos/bank-account/update-bank-account-dto'
 import { GetAllBankAccountsOutputDto } from '@src/modules/bank-accounts/http/dtos/bank-account/get-all-bank-accounts-dto'
+import { randomUUID } from 'crypto'
 
 @Injectable()
 export class BankAccountPrismaRepository implements BankAccountRepository {
@@ -149,5 +150,40 @@ export class BankAccountPrismaRepository implements BankAccountRepository {
     }
 
     return { bankAccounts: bankAccountEntities }
+  }
+
+  async incrementBalance(
+    bankAccountId: string,
+    amountToDeposit: number,
+    transaction?: Prisma.TransactionClient
+  ): Promise<BankAccountEntity> {
+    const repository =
+      transaction && transaction instanceof PrismaService
+        ? transaction.bankAccount
+        : this.repository
+
+    const currentTimestamp = new Date()
+
+    const bankAccountOnDatabase = await repository.update({
+      where: {
+        id: bankAccountId
+      },
+      data: {
+        balance: {
+          increment: amountToDeposit
+        },
+        Transactions: {
+          create: {
+            id: randomUUID(),
+            createdAt: currentTimestamp,
+            type: 'DEPOSITO',
+            value: amountToDeposit
+          }
+        },
+        updatedAt: currentTimestamp
+      }
+    })
+
+    return new BankAccountEntity(bankAccountOnDatabase)
   }
 }

@@ -6,23 +6,27 @@ import { Test, TestingModule } from '@nestjs/testing'
 import { AppModule } from '@src/app.module'
 import { PersistenceModule } from '@src/shared/modules/persistence/persistence.module'
 
-import { ConfigService } from '@src/shared/modules/config/service/config.service'
-
-import { PrismaClientExceptionFilter } from '@src/shared/modules/persistence/prisma-client-exception/prisma-client-exception.filter'
 import { BankAccountPrismaRepository } from '@src/modules/bank-accounts/repositories/bank-account.prisma.repository'
+
+import { ConfigService } from '@src/shared/modules/config/service/config.service'
+import { PrismaService } from '@src/shared/modules/persistence/prisma.service'
+
 import { CreateBankAccountInputDto } from '@src/modules/bank-accounts/http/dtos/bank-account/create-bank-account-dto'
 import { BankAccountEntity } from '@src/modules/bank-accounts/domain/entities/bank-account.entity'
 import { UpdateBankAccountInputDto } from '@src/modules/bank-accounts/http/dtos/bank-account/update-bank-account-dto'
+
+import { PrismaClientExceptionFilter } from '@src/shared/modules/persistence/prisma-client-exception/prisma-client-exception.filter'
 
 describe('Bank Account Controller (e2e)', () => {
   let app: INestApplication
   let bankAccountRepository: BankAccountPrismaRepository
   let module: TestingModule
+  let prismaService: PrismaService
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [AppModule, PersistenceModule],
-      providers: [ConfigService, BankAccountPrismaRepository]
+      providers: [ConfigService, BankAccountPrismaRepository, PrismaService]
     }).compile()
 
     app = module.createNestApplication()
@@ -39,16 +43,21 @@ describe('Bank Account Controller (e2e)', () => {
     app.useGlobalFilters(new PrismaClientExceptionFilter(httpAdapter))
 
     await app.init()
+
     bankAccountRepository = module.get<BankAccountPrismaRepository>(
       BankAccountPrismaRepository
     )
+
+    prismaService = module.get<PrismaService>(PrismaService)
   })
 
   beforeEach(async () => {
+    await prismaService.transaction.deleteMany()
     await bankAccountRepository.clear()
   })
 
   afterAll(async () => {
+    await prismaService.transaction.deleteMany()
     await bankAccountRepository.clear()
     module.close()
   })
@@ -188,7 +197,7 @@ describe('Bank Account Controller (e2e)', () => {
       expect(message).toBe('Not Found')
     })
 
-    it('should throw error if bankAccountId is sended but is not UIID', async () => {
+    it('should throw error if bankAccountId is sended but is not UUID', async () => {
       const newBankAccountProps: UpdateBankAccountInputDto = {
         agency: 'Mocked Agency 123',
         type: 'CORRENTE'
@@ -567,6 +576,126 @@ describe('Bank Account Controller (e2e)', () => {
 
       expect(statusCode).toBe(400)
       expect(message[0]).toBe('pageSize must not be less than 1')
+      expect(error).toBe('Bad Request')
+    })
+  })
+
+  describe('Bank Account Management - deposit on bank account', () => {
+    it('should deposit on bank account and return a bank account updated', async () => {
+      const bankAccountEntity = BankAccountEntity.create({
+        agency: 'Mocked Agency 123',
+        type: 'CORRENTE',
+        balance: 100
+      })
+
+      await bankAccountRepository.save(bankAccountEntity)
+
+      const amountToDeposit = 1500
+
+      const response = await request(app.getHttpServer())
+        .put(`/bank-accounts/${bankAccountEntity.id}/deposit`)
+        .send({
+          value: amountToDeposit
+        })
+
+      const { id, agency, type, balance, createdAt, updatedAt, isActive } =
+        response.body
+
+      expect(id).toEqual(bankAccountEntity.id)
+      expect(agency).toBe(bankAccountEntity.agency)
+      expect(type).toBe(bankAccountEntity.type)
+      expect(createdAt).toBeDefined()
+      expect(updatedAt).toBeDefined()
+      expect(balance).toEqual(amountToDeposit + bankAccountEntity.balance)
+      expect(isActive).toEqual(true)
+    })
+
+    it('should throw error if bank account to deposit not exists on database', async () => {
+      const mockedUUID = '34c65aa9-0fc8-4f87-8696-5b1448a06ac4'
+
+      const amountToDeposit = 1500
+
+      const response = await request(app.getHttpServer())
+        .put(`/bank-accounts/${mockedUUID}/deposit`)
+        .send({ value: amountToDeposit })
+
+      const { statusCode, message } = response.body
+
+      expect(response.status).toEqual(404)
+
+      expect(statusCode).toBe(404)
+      expect(message).toBe('Not Found')
+    })
+
+    it('should throw error if bankAccountId is sended but is not UUID', async () => {
+      const amountToDeposit = 1500
+
+      const mockedFakeUUID = '123'
+
+      const response = await request(app.getHttpServer())
+        .put(`/bank-accounts/${mockedFakeUUID}/deposit`)
+        .send({ value: amountToDeposit })
+
+      const { statusCode, message, error } = response.body
+
+      expect(response.status).toEqual(400)
+
+      expect(statusCode).toBe(400)
+      expect(message[0]).toBe('bankAccountId must be a UUID')
+      expect(error).toBe('Bad Request')
+    })
+
+    it('should throw error if amount to deposit is zero', async () => {
+      const mockedUUID = '34c65aa9-0fc8-4f87-8696-5b1448a06ac4'
+
+      const amountToDeposit = 0
+
+      const response = await request(app.getHttpServer())
+        .put(`/bank-accounts/${mockedUUID}/deposit`)
+        .send({ value: amountToDeposit })
+
+      const { statusCode, message, error } = response.body
+
+      expect(response.status).toEqual(400)
+
+      expect(statusCode).toBe(400)
+      expect(message[0]).toBe('value must not be less than 1')
+      expect(error).toBe('Bad Request')
+    })
+
+    it('should throw error if amount to deposit is negative number', async () => {
+      const mockedUUID = '34c65aa9-0fc8-4f87-8696-5b1448a06ac4'
+
+      const amountToDeposit = -1
+
+      const response = await request(app.getHttpServer())
+        .put(`/bank-accounts/${mockedUUID}/deposit`)
+        .send({ value: amountToDeposit })
+
+      const { statusCode, message, error } = response.body
+
+      expect(response.status).toEqual(400)
+
+      expect(statusCode).toBe(400)
+      expect(message[0]).toBe('value must not be less than 1')
+      expect(error).toBe('Bad Request')
+    })
+
+    it('should throw error if amount to deposit is not a number', async () => {
+      const mockedUUID = '34c65aa9-0fc8-4f87-8696-5b1448a06ac4'
+
+      const amountToDeposit = 'mockedNotNumberValueToDeposit'
+
+      const response = await request(app.getHttpServer())
+        .put(`/bank-accounts/${mockedUUID}/deposit`)
+        .send({ value: amountToDeposit })
+
+      const { statusCode, message, error } = response.body
+
+      expect(response.status).toEqual(400)
+
+      expect(statusCode).toBe(400)
+      expect(message[0]).toBe('value must not be less than 1')
       expect(error).toBe('Bad Request')
     })
   })

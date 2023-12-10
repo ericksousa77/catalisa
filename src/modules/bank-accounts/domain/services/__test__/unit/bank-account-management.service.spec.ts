@@ -1,3 +1,4 @@
+import { BadRequestException } from '@nestjs/common'
 import { Test, TestingModule } from '@nestjs/testing'
 
 import { BankAccountEntity } from '@src/modules/bank-accounts/domain/entities/bank-account.entity'
@@ -24,7 +25,8 @@ describe('BankAccountManagementService', () => {
             update: jest.fn(),
             deactivateBankAccount: jest.fn(),
             findOne: jest.fn(),
-            findAll: jest.fn()
+            findAll: jest.fn(),
+            incrementBalance: jest.fn()
           }
         }
       ]
@@ -250,6 +252,77 @@ describe('BankAccountManagementService', () => {
         total: 2,
         pageCount: 1
       })
+    })
+  })
+
+  describe('depositOnBankAccount', () => {
+    it('should call bank account repository function to update bank account balance and return bank account updated', async () => {
+      const bankAccountEntity = BankAccountEntity.create({
+        agency: 'Mocked Agency',
+        type: 'POUPANCA',
+        balance: 0
+      })
+
+      const amountToDeposit = 2500
+
+      jest.spyOn(bankAccountRepository, 'incrementBalance').mockResolvedValue({
+        ...bankAccountEntity,
+        balance: amountToDeposit
+      })
+
+      const result = await service.depositOnBankAccount(
+        bankAccountEntity.id,
+        amountToDeposit
+      )
+
+      expect(bankAccountRepository.incrementBalance).toBeCalledTimes(1)
+      expect(bankAccountRepository.incrementBalance).toBeCalledWith(
+        bankAccountEntity.id,
+        amountToDeposit
+      )
+
+      expect(result).toEqual({
+        ...bankAccountEntity,
+        balance: amountToDeposit
+      })
+    })
+
+    it('should throw error if amount to deposit is zero', async () => {
+      const bankAccountEntity = BankAccountEntity.create({
+        agency: 'Mocked Agency',
+        type: 'POUPANCA',
+        balance: 100
+      })
+
+      const amountToDeposit = 0
+
+      await expect(async () => {
+        await service.depositOnBankAccount(
+          bankAccountEntity.id,
+          amountToDeposit
+        )
+      }).rejects.toThrow(BadRequestException)
+
+      expect(bankAccountRepository.incrementBalance).toBeCalledTimes(0)
+    })
+
+    it('should throw error if amount to deposit is negative number', async () => {
+      const bankAccountEntity = BankAccountEntity.create({
+        agency: 'Mocked Agency',
+        type: 'POUPANCA',
+        balance: 100
+      })
+
+      const amountToDeposit = -1
+
+      await expect(async () => {
+        await service.depositOnBankAccount(
+          bankAccountEntity.id,
+          amountToDeposit
+        )
+      }).rejects.toThrow(BadRequestException)
+
+      expect(bankAccountRepository.incrementBalance).toBeCalledTimes(0)
     })
   })
 })

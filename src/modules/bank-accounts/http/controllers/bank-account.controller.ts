@@ -35,6 +35,11 @@ import {
   GetAllBankAccountsInputDto,
   GetAllBankAccountsOutputDto
 } from '../dtos/bank-account/get-all-bank-accounts-dto'
+import {
+  DepositBankAccountInputDto,
+  DepositBankAccountOutputDto,
+  DepositBankAccountParamInputDto
+} from '../dtos/bank-account/deposit-bank-account-dto'
 
 @ApiTags('bank-accounts')
 @Controller('bank-accounts')
@@ -152,5 +157,28 @@ export class BankAccountController {
       )
     }
     return this.bankAccountManagementService.findAllBankAccounts()
+  }
+
+  @Put(':bankAccountId/deposit') // route HTTP method definition
+  @HttpCode(HttpStatus.OK)
+  /* Swagger Doc */
+  @ApiOperation({
+    summary: 'Bank Account Update',
+    description: 'Update a bank account on the system'
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Bank Account updated',
+    type: UpdateBankAccountOutputDto
+  })
+  /* function */
+  async depositBankAccount(
+    @Param() params: DepositBankAccountParamInputDto,
+    @Body() depositData: DepositBankAccountInputDto
+  ): Promise<DepositBankAccountOutputDto> {
+    return this.bankAccountManagementService.depositOnBankAccount(
+      params.bankAccountId,
+      depositData.value
+    )
   }
 }
