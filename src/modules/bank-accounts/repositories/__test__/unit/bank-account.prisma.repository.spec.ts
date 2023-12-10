@@ -286,8 +286,8 @@ describe('BankAccountPrismaRepository', () => {
     })
   })
 
-  describe('updateBalance', () => {
-    it('should call prisma method to update bank account balance on database and return updated bank account entity', async () => {
+  describe('incrementBalance', () => {
+    it('should call prisma method to increment bank account balance on database and return updated bank account entity', async () => {
       const bankAccount = BankAccountEntity.create({
         agency: 'Mocked Agency',
         type: 'CORRENTE',
@@ -332,6 +332,56 @@ describe('BankAccountPrismaRepository', () => {
       expect(result).toEqual({
         ...bankAccount,
         balance: 3000
+      })
+    })
+  })
+
+  describe('decrementBalance', () => {
+    it('should call prisma method to decrement bank account balance on database and return updated bank account entity', async () => {
+      const bankAccount = BankAccountEntity.create({
+        agency: 'Mocked Agency',
+        type: 'CORRENTE',
+        balance: 2000
+      })
+
+      const amountToWithdraw = 1000
+
+      model.update.mockResolvedValue({
+        ...bankAccount,
+        balance: 1000
+      })
+
+      const mockedCurrentTimestamp = new Date()
+
+      const result = await bankAccountRepository.decrementBalance(
+        bankAccount.id,
+        amountToWithdraw
+      )
+
+      expect(model.update).toBeCalledTimes(1)
+      expect(model.update).toHaveBeenCalledWith({
+        where: {
+          id: bankAccount.id
+        },
+        data: {
+          balance: {
+            decrement: amountToWithdraw
+          },
+          Transactions: {
+            create: {
+              id: expect.any(String),
+              createdAt: mockedCurrentTimestamp,
+              type: 'SAQUE',
+              value: amountToWithdraw
+            }
+          },
+          updatedAt: mockedCurrentTimestamp
+        }
+      })
+
+      expect(result).toEqual({
+        ...bankAccount,
+        balance: 1000
       })
     })
   })

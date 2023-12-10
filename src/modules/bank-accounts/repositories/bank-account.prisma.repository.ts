@@ -187,4 +187,39 @@ export class BankAccountPrismaRepository implements BankAccountRepository {
 
     return new BankAccountEntity(bankAccountOnDatabase)
   }
+
+  async decrementBalance(
+    bankAccountId: string,
+    amountToWithdraw: number,
+    transaction?: Prisma.TransactionClient
+  ): Promise<BankAccountEntity> {
+    const repository =
+      transaction && transaction instanceof PrismaService
+        ? transaction.bankAccount
+        : this.repository
+
+    const currentTimestamp = new Date()
+
+    const bankAccountOnDatabase = await repository.update({
+      where: {
+        id: bankAccountId
+      },
+      data: {
+        balance: {
+          decrement: amountToWithdraw
+        },
+        Transactions: {
+          create: {
+            id: randomUUID(),
+            createdAt: currentTimestamp,
+            type: 'SAQUE',
+            value: amountToWithdraw
+          }
+        },
+        updatedAt: currentTimestamp
+      }
+    })
+
+    return new BankAccountEntity(bankAccountOnDatabase)
+  }
 }
