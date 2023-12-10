@@ -11,28 +11,38 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum TransactionType {
+  DEPOSITO
+  SAQUE
+}
+
+enum BankAccountType {
+  CORRENTE
+  POUPANCA
+}
+
 model BankAccount {
-  id            String        @id
-  accountNumber Int           @unique @default(autoincrement()) @map("account_number")
+  id            String          @id
+  accountNumber Int             @unique @default(autoincrement()) @map("account_number")
   agency        String
-  type          String
+  type          BankAccountType
   balance       Float
-  isActive      Boolean       @default(true) @map("is_active")
-  createdAt     DateTime      @map("created_at")
-  updatedAt     DateTime      @map("updated_at")
+  isActive      Boolean         @default(true) @map("is_active")
+  createdAt     DateTime        @map("created_at")
+  updatedAt     DateTime        @map("updated_at")
   Transactions  Transaction[]
 
   @@map("bank_accounts")
 }
 
 model Transaction {
-  id            String      @id
-  code          Int         @default(autoincrement())
-  type          String
+  id            String          @id
+  code          Int             @default(autoincrement())
+  type          TransactionType
   value         Float
-  bankAccountId String      @map("bank_account_id")
-  BankAccount   BankAccount @relation(fields: [bankAccountId], references: [id])
-  createdAt     DateTime    @map("created_at")
+  bankAccountId String          @map("bank_account_id")
+  BankAccount   BankAccount     @relation(fields: [bankAccountId], references: [id])
+  createdAt     DateTime        @map("created_at")
 
   @@map("transactions")
 }
