@@ -9,6 +9,12 @@
 * Docker
 * Docker compose
 
+##Diagrama do Banco de Dados (SQL)
+
+<p align="center">
+  <img src="database-diagram-catalisa.png" alt="Diagrama Banco de Dados">
+</p>
+
 ## Definição das variáveis de ambiente:
 
 Na raiz do projeto deve existir um arquivo **.env** definindo os valores para as variaveis de ambiente do projeto. A titulo de facilitar a execução do projeto, deixei um exemplo no arquivo **.env.default** que esta na raiz do projeto. Sendo assim basta copiar o conteudo desse arquivo e colocar no arquivo **.env**.
