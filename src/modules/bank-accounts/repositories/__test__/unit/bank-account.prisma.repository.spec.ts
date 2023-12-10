@@ -23,7 +23,9 @@ describe('BankAccountPrismaRepository', () => {
               create: jest.fn(),
               deleteMany: jest.fn(),
               update: jest.fn(),
-              findFirstOrThrow: jest.fn()
+              findFirstOrThrow: jest.fn(),
+              findMany: jest.fn(),
+              count: jest.fn()
             }
           }
         }
@@ -188,6 +190,90 @@ describe('BankAccountPrismaRepository', () => {
       })
 
       expect(result).toEqual({ ...bankAccount, Transactions: null })
+    })
+  })
+
+  describe('findAll', () => {
+    it('should call prisma method to find all bank accounts on database without pagination', async () => {
+      const firstBankAccount = BankAccountEntity.create({
+        agency: 'Mocked Agency',
+        type: 'CORRENTE',
+        balance: 2000,
+        isActive: true,
+        accountNumber: 1
+      })
+
+      const secondBankAccount = BankAccountEntity.create({
+        agency: 'Mocked Agency',
+        type: 'CORRENTE',
+        balance: 2000,
+        isActive: true,
+        accountNumber: 2
+      })
+
+      model.findMany.mockResolvedValue([firstBankAccount, secondBankAccount])
+
+      model.count.mockResolvedValue(2)
+
+      const result = await bankAccountRepository.findAll()
+
+      expect(model.findMany).toBeCalledTimes(1)
+      expect(model.count).toBeCalledTimes(1)
+      expect(model.findMany).toHaveBeenCalledWith({
+        orderBy: {
+          accountNumber: 'asc'
+        }
+      })
+
+      expect(result.bankAccounts[0]).toEqual(firstBankAccount)
+      expect(result.bankAccounts[1]).toEqual(secondBankAccount)
+    })
+
+    it('should call prisma method to find all bank accounts on database with pagination', async () => {
+      const firstBankAccount = BankAccountEntity.create({
+        agency: 'Mocked Agency',
+        type: 'CORRENTE',
+        balance: 2000,
+        isActive: true,
+        accountNumber: 1
+      })
+
+      const secondBankAccount = BankAccountEntity.create({
+        agency: 'Mocked Agency',
+        type: 'CORRENTE',
+        balance: 2000,
+        isActive: true,
+        accountNumber: 2
+      })
+
+      model.findMany.mockResolvedValue([firstBankAccount, secondBankAccount])
+
+      model.count.mockResolvedValue(2)
+
+      const page = 1
+      const pageSize = 2
+
+      const result = await bankAccountRepository.findAll(page, pageSize)
+
+      expect(model.findMany).toBeCalledTimes(1)
+      expect(model.count).toBeCalledTimes(1)
+      expect(model.findMany).toHaveBeenCalledWith({
+        skip: 0,
+        take: 2,
+        orderBy: {
+          accountNumber: 'asc'
+        }
+      })
+
+      expect(result.bankAccounts[0]).toEqual(firstBankAccount)
+      expect(result.bankAccounts[1]).toEqual(secondBankAccount)
+
+      //pagination parameters
+
+      expect(result.page).toEqual(1)
+      expect(result.pageSize).toEqual(2)
+      expect(result.pageCount).toEqual(1)
+      expect(result.total).toEqual(2)
     })
   })
 })

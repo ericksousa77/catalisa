@@ -23,7 +23,8 @@ describe('BankAccountManagementService', () => {
             save: jest.fn(),
             update: jest.fn(),
             deactivateBankAccount: jest.fn(),
-            findOne: jest.fn()
+            findOne: jest.fn(),
+            findAll: jest.fn()
           }
         }
       ]
@@ -150,7 +151,7 @@ describe('BankAccountManagementService', () => {
     })
   })
 
-  describe('findOne', () => {
+  describe('findOneBankAccount', () => {
     it('should call bank account repository function to find one bank account by ID and return', async () => {
       const activeBankAccountEntity = BankAccountEntity.create({
         agency: 'Mocked Agency',
@@ -174,6 +175,81 @@ describe('BankAccountManagementService', () => {
       )
 
       expect(result).toEqual(activeBankAccountEntity)
+    })
+  })
+
+  describe('findAllBankAccounts', () => {
+    it('should call bank account repository function to find all bank accounts and return without pagination', async () => {
+      const firstBankAccountEntity = BankAccountEntity.create({
+        agency: 'Mocked Agency',
+        type: 'POUPANCA',
+        balance: 0,
+        isActive: true,
+        accountNumber: 2
+      })
+
+      const secondBankAccountEntity = BankAccountEntity.create({
+        agency: 'Mocked Agency',
+        type: 'POUPANCA',
+        balance: 0,
+        isActive: true,
+        accountNumber: 3
+      })
+
+      jest.spyOn(bankAccountRepository, 'findAll').mockResolvedValue({
+        bankAccounts: [firstBankAccountEntity, secondBankAccountEntity]
+      })
+
+      const result = await service.findAllBankAccounts()
+
+      expect(bankAccountRepository.findAll).toBeCalledTimes(1)
+      expect(bankAccountRepository.findAll).toBeCalledWith(undefined, undefined)
+
+      expect(result).toEqual({
+        bankAccounts: [firstBankAccountEntity, secondBankAccountEntity]
+      })
+    })
+
+    it('should call bank account repository function to find all bank accounts and return with pagination', async () => {
+      const firstBankAccountEntity = BankAccountEntity.create({
+        agency: 'Mocked Agency',
+        type: 'POUPANCA',
+        balance: 0,
+        isActive: true,
+        accountNumber: 2
+      })
+
+      const secondBankAccountEntity = BankAccountEntity.create({
+        agency: 'Mocked Agency',
+        type: 'POUPANCA',
+        balance: 0,
+        isActive: true,
+        accountNumber: 3
+      })
+
+      jest.spyOn(bankAccountRepository, 'findAll').mockResolvedValue({
+        bankAccounts: [firstBankAccountEntity, secondBankAccountEntity],
+        page: 1,
+        pageSize: 2,
+        total: 2,
+        pageCount: 1
+      })
+
+      const page = 1
+      const pageSize = 2
+
+      const result = await service.findAllBankAccounts(page, pageSize)
+
+      expect(bankAccountRepository.findAll).toBeCalledTimes(1)
+      expect(bankAccountRepository.findAll).toBeCalledWith(page, pageSize)
+
+      expect(result).toEqual({
+        bankAccounts: [firstBankAccountEntity, secondBankAccountEntity],
+        page: 1,
+        pageSize: 2,
+        total: 2,
+        pageCount: 1
+      })
     })
   })
 })

@@ -7,7 +7,8 @@ import {
   Put,
   Param,
   Delete,
-  Get
+  Get,
+  Query
 } from '@nestjs/common'
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 
@@ -30,6 +31,10 @@ import {
   ShowBankAccountOutputDto,
   ShowBankAccountParamInputDto
 } from '../dtos/bank-account/show-bank-account-dto'
+import {
+  GetAllBankAccountsInputDto,
+  GetAllBankAccountsOutputDto
+} from '../dtos/bank-account/get-all-bank-accounts-dto'
 
 @ApiTags('bank-accounts')
 @Controller('bank-accounts')
@@ -120,5 +125,32 @@ export class BankAccountController {
     return this.bankAccountManagementService.findOneBankAccount(
       params.bankAccountId
     )
+  }
+
+  @Get() // route HTTP method definition
+  @HttpCode(HttpStatus.OK)
+  /* Swagger Doc */
+  @ApiOperation({
+    summary: 'Bank Account Show',
+    description: 'Find one bank account by ID'
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Bank Account found by id',
+    type: ShowBankAccountOutputDto
+  })
+  /* function */
+  async findAllBankAccounts(
+    @Query() params: GetAllBankAccountsInputDto
+  ): Promise<GetAllBankAccountsOutputDto> {
+    if (!!params.page && !!params.pageSize) {
+      const page = parseInt(params.page.toString(), 10)
+      const pageSize = parseInt(params.pageSize.toString(), 10)
+      return this.bankAccountManagementService.findAllBankAccounts(
+        page,
+        pageSize
+      )
+    }
+    return this.bankAccountManagementService.findAllBankAccounts()
   }
 }
