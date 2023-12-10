@@ -1,8 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { IsNotEmpty, IsUUID, Min } from 'class-validator'
+import { Type } from 'class-transformer'
 
 import { BankAccountEntity } from '@src/modules/bank-accounts/domain/entities/bank-account.entity'
-import { Type } from 'class-transformer'
 
 export class DepositBankAccountInputDto {
   @ApiProperty()
