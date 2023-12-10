@@ -122,4 +122,40 @@ describe('BankAccountPrismaRepository', () => {
       })
     })
   })
+
+  describe('deactivateBankAccount', () => {
+    it('should call prisma method to update bank account isActive status to false on database ', async () => {
+      const activeBankAccount = BankAccountEntity.create({
+        agency: 'Mocked Agency',
+        type: 'CORRENTE',
+        balance: 2000,
+        isActive: true,
+        accountNumber: 1
+      })
+
+      model.update.mockResolvedValue({
+        ...activeBankAccount,
+        isActive: false
+      })
+
+      const result = await bankAccountRepository.deactivateBankAccount(
+        activeBankAccount.id
+      )
+
+      expect(model.update).toBeCalledTimes(1)
+      expect(model.update).toHaveBeenCalledWith({
+        where: {
+          id: activeBankAccount.id
+        },
+        data: {
+          isActive: false
+        }
+      })
+
+      expect(result).toEqual({
+        ...activeBankAccount,
+        isActive: false
+      })
+    })
+  })
 })

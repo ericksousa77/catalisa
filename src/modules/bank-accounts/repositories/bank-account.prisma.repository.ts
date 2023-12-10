@@ -55,4 +55,25 @@ export class BankAccountPrismaRepository implements BankAccountRepository {
 
     return new BankAccountEntity(bankAccountOnDatabase)
   }
+
+  async deactivateBankAccount(
+    bankAccountId: string,
+    transaction?: Prisma.TransactionClient
+  ): Promise<BankAccountEntity> {
+    const repository =
+      transaction && transaction instanceof PrismaService
+        ? transaction.bankAccount
+        : this.repository
+
+    const bankAccountOnDatabase = await repository.update({
+      where: {
+        id: bankAccountId
+      },
+      data: {
+        isActive: false
+      }
+    })
+
+    return new BankAccountEntity(bankAccountOnDatabase)
+  }
 }

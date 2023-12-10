@@ -27,4 +27,10 @@ export class BankAccountManagementService {
   ): Promise<BankAccountEntity> {
     return this.bankAccountRepository.update(bankAccountId, bankAccountProps)
   }
+
+  async deactivateBankAccount(
+    bankAccountId: string
+  ): Promise<BankAccountEntity> {
+    return this.bankAccountRepository.deactivateBankAccount(bankAccountId)
+  }
 }
