@@ -9,7 +9,7 @@
 * Docker
 * Docker compose
 
-##Diagrama do Banco de Dados (SQL)
+## Diagrama do Banco de Dados (SQL)
 
 <p align="center">
   <img src="database-diagram-catalisa.png" alt="Diagrama Banco de Dados">
