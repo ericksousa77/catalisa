@@ -266,7 +266,7 @@ describe('Bank Account Controller (e2e)', () => {
     })
   })
 
-  describe('Bank Account Management - update bank account', () => {
+  describe('Bank Account Management - deactivate bank account', () => {
     it('should deactivate and return a bank account', async () => {
       const activeBankAccountEntity = BankAccountEntity.create({
         agency: 'Mocked Agency 123',
@@ -312,6 +312,78 @@ describe('Bank Account Controller (e2e)', () => {
       const mockedFakeUUID = '123'
 
       const response = await request(app.getHttpServer()).delete(
+        `/bank-accounts/${mockedFakeUUID}`
+      )
+
+      const { statusCode, message, error } = response.body
+
+      expect(response.status).toEqual(400)
+
+      expect(statusCode).toBe(400)
+      expect(message[0]).toBe('bankAccountId must be a UUID')
+      expect(error).toBe('Bad Request')
+    })
+  })
+
+  describe('Bank Account Management - findOne bank account', () => {
+    it('should find by id and return a bank account', async () => {
+      const bankAccountEntity = BankAccountEntity.create({
+        agency: 'Mocked Agency 123',
+        type: 'CORRENTE',
+        balance: 0,
+        isActive: true
+      })
+
+      await bankAccountRepository.save(bankAccountEntity)
+
+      const response = await request(app.getHttpServer()).get(
+        `/bank-accounts/${bankAccountEntity.id}`
+      )
+
+      console.log(response.body)
+
+      const {
+        id,
+        agency,
+        type,
+        balance,
+        createdAt,
+        updatedAt,
+        isActive,
+        Transactions
+      } = response.body
+
+      expect(id).toEqual(bankAccountEntity.id)
+      expect(agency).toBe(bankAccountEntity.agency)
+      expect(type).toBe(bankAccountEntity.type)
+      expect(createdAt).toBeDefined()
+      expect(updatedAt).toBeDefined()
+      expect(balance).toEqual(bankAccountEntity.balance)
+      expect(isActive).toEqual(bankAccountEntity.isActive)
+      expect(Transactions).toEqual([])
+    })
+
+    // TODO: futuramente adicionar um caso de teste em que é retornado uma conta que contem transações. Nesse teste validar as transações também
+
+    it('should throw error if bank account to show not exists on database', async () => {
+      const mockedUUID = '34c65aa9-0fc8-4f87-8696-5b1448a06ac4'
+
+      const response = await request(app.getHttpServer()).get(
+        `/bank-accounts/${mockedUUID}`
+      )
+
+      const { statusCode, message } = response.body
+
+      expect(response.status).toEqual(404)
+
+      expect(statusCode).toBe(404)
+      expect(message).toBe('Not Found')
+    })
+
+    it('should throw error if bankAccountId is sended but is not a uuid', async () => {
+      const mockedFakeUUID = '123'
+
+      const response = await request(app.getHttpServer()).get(
         `/bank-accounts/${mockedFakeUUID}`
       )
 
