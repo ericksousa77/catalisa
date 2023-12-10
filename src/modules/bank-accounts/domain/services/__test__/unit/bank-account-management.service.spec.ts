@@ -21,7 +21,8 @@ describe('BankAccountManagementService', () => {
           provide: BankAccountRepository,
           useValue: {
             save: jest.fn(),
-            update: jest.fn()
+            update: jest.fn(),
+            deactivateBankAccount: jest.fn()
           }
         }
       ]
@@ -111,6 +112,39 @@ describe('BankAccountManagementService', () => {
         isActive: true,
         agency: 'New Mocked Agency',
         type: 'CORRENTE'
+      })
+    })
+  })
+
+  describe('deactivateAccount', () => {
+    it('should call bank account repository function to update bank account isActive status to false and return', async () => {
+      const activeBankAccountEntity = BankAccountEntity.create({
+        agency: 'Mocked Agency',
+        type: 'POUPANCA',
+        balance: 0,
+        isActive: true,
+        accountNumber: 2
+      })
+
+      jest
+        .spyOn(bankAccountRepository, 'deactivateBankAccount')
+        .mockResolvedValue({
+          ...activeBankAccountEntity,
+          isActive: false
+        })
+
+      const result = await service.deactivateBankAccount(
+        activeBankAccountEntity.id
+      )
+
+      expect(bankAccountRepository.deactivateBankAccount).toBeCalledTimes(1)
+      expect(bankAccountRepository.deactivateBankAccount).toBeCalledWith(
+        activeBankAccountEntity.id
+      )
+
+      expect(result).toEqual({
+        ...activeBankAccountEntity,
+        isActive: false
       })
     })
   })
