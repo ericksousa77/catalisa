@@ -54,7 +54,7 @@ export class BankAccountPrismaRepository implements BankAccountRepository {
       where: {
         id: bankAccountId
       },
-      data: bankAccountEntity
+      data: { ...bankAccountEntity, updatedAt: new Date() }
     })
 
     return new BankAccountEntity(bankAccountOnDatabase)
@@ -74,7 +74,8 @@ export class BankAccountPrismaRepository implements BankAccountRepository {
         id: bankAccountId
       },
       data: {
-        isActive: false
+        isActive: false,
+        updatedAt: new Date()
       }
     })
 
