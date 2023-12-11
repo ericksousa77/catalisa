@@ -48,6 +48,14 @@ Exemplo de request:
 
 `Método GET - http://localhost:3333/api/v1/bank-accounts`
 
+*Outra alternativa para executar o projeto é executa-lo fora do container, nesse caso basta utilizar o comando:
+
+`yarn start:dev`
+
+Após executar esse comando o backend também estará sendo executado em:
+
+`http://localhost:3333/api/v1`
+
 ## Documentação do projeto:
 
 Toda documentação do projeto foi feita utilizando swagger. Para acessa-la basta que o projeto esteja rodando:
